@@ -21,6 +21,7 @@ import moe.nea.firmament.gui.config.AllConfigsGui
 import moe.nea.firmament.gui.config.BooleanHandler
 import moe.nea.firmament.gui.config.ManagedConfig
 import moe.nea.firmament.gui.config.ManagedOption
+import moe.nea.firmament.gui.profileviewer.ProfileViewer
 import moe.nea.firmament.init.MixinPlugin
 import moe.nea.firmament.repo.HypixelStaticData
 import moe.nea.firmament.repo.ItemCache
@@ -30,6 +31,7 @@ import moe.nea.firmament.util.FirmFormatters
 import moe.nea.firmament.util.FirmFormatters.debugPath
 import moe.nea.firmament.util.FirmFormatters.formatBool
 import moe.nea.firmament.util.MC
+import moe.nea.firmament.util.MoulConfigUtils
 import moe.nea.firmament.util.SBData
 import moe.nea.firmament.util.ScreenUtil
 import moe.nea.firmament.util.SkyblockId
@@ -343,6 +345,19 @@ fun firmamentCommand() = literal("firmament") {
 				                       "ItemCache flawless: ${formatBool(ItemCache.isFlawless)}"))
 				source.sendFeedback(tr("firmament.repo.info.itemdir",
 				                       "Items on disk: ${debugPath(RepoDownloadManager.repoSavedLocation.resolve("items"))}"))
+			}
+		}
+	}
+	thenLiteral("pv") {
+		thenExecute {
+			ProfileViewer.onCommand(source, MC.player!!.name.unformattedString)
+		}
+		thenArgument("name", string()) { name ->
+			suggestsList {
+				MC.world?.players?.filter { it.uuid?.version() == 4 }?.map { it.name.unformattedString } ?: listOf()
+			}
+			thenExecute {
+				ProfileViewer.onCommand(source, get(name))
 			}
 		}
 	}

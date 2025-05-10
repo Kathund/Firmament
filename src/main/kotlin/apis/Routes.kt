@@ -60,7 +60,7 @@ object Routes {
         return withContext(MinecraftDispatcher) {
             accounts.computeIfAbsent(uuid) {
                 async(Firmament.coroutineScope.coroutineContext) {
-                    val response = UrsaManager.request(listOf("v1", "hypixel","player", uuid.toString()))
+                    val response = UrsaManager.request(listOf("v1", "hypixel", "v2", "player", uuid.toString()))
                     if (!response.status.isSuccess()) {
                         launch(MinecraftDispatcher) {
                             @Suppress("DeferredResultUnused")
@@ -78,7 +78,7 @@ object Routes {
         return withContext(MinecraftDispatcher) {
             profiles.computeIfAbsent(uuid) {
                 async(Firmament.coroutineScope.coroutineContext) {
-                    val response = UrsaManager.request(listOf("v1", "hypixel","profiles", uuid.toString()))
+                    val response = UrsaManager.request(listOf("v1", "hypixel", "v2", "profiles", uuid.toString()))
                     if (!response.status.isSuccess()) {
                         launch(MinecraftDispatcher) {
                             @Suppress("DeferredResultUnused")

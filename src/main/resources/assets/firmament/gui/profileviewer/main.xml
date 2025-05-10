@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<Root xmlns="http://notenoughupdates.org/moulconfig" xmlns:firm="http://firmament.nea.moe/moulconfig">
+	<Gui>
+		<ScrollPanel width="600" height="300">
+			<Center>
+				<firm:Hover lines="hello hi profile stats go brrrrrrr">
+					<firm:Button onClick="@profileStats" noBackground="true">
+						<firm:Image resource="firmament:textures/gui/profileviewer/profile_stats.png" width="32" height="32"/>
+					</firm:Button>
+				</firm:Hover>
+			</Center>
+		</ScrollPanel>
+	</Gui>
+</Root>

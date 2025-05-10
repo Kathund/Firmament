@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<Root xmlns="http://notenoughupdates.org/moulconfig" xmlns:firm="http://firmament.nea.moe/moulconfig">
+	<Gui>
+		<ScrollPanel width="600" height="300">
+			<Align horizontal="RIGHT" vertical="CENTER">
+				<Panel background="TRANSPARENT" insets="4">
+					<Column>
+						<Array data="@Skills">
+							<Panel background="VANILLA">
+								<Row>
+									<Text text="@skillName" width="75"/>
+									<Text text="@skillLevelString" width="40" textAlign="RIGHT"/>
+								</Row>
+							</Panel>
+						</Array>
+					</Column>
+				</Panel>
+			</Align>
+		</ScrollPanel>
+	</Gui>
+</Root>

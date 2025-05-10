@@ -2,6 +2,9 @@ package moe.nea.firmament.util
 
 import com.google.common.math.IntMath.pow
 import java.nio.file.Path
+import java.time.Instant
+import java.time.ZoneId
+import java.time.format.DateTimeFormatter
 import kotlin.io.path.exists
 import kotlin.io.path.fileSize
 import kotlin.io.path.isDirectory
@@ -71,7 +74,7 @@ object FirmFormatters {
 		return "%dm".format(distance.toInt())
 	}
 
-	fun formatTimespan(duration: Duration, millis: Boolean = false): String {
+	fun formatTimespan(duration: Duration, millis: Boolean = false, longText: Boolean = false): String {
 		if (duration.isInfinite()) {
 			return if (duration.isPositive()) "∞"
 			else "-∞"
@@ -79,29 +82,66 @@ object FirmFormatters {
 		val sb = StringBuilder()
 		if (duration.isNegative()) sb.append("-")
 		duration.toComponents { days, hours, minutes, seconds, nanoseconds ->
-			if (days > 0) {
-				sb.append(days).append("d")
+			val years = days / 365
+			val remainingDays = days % 365
+
+			if (years > 0) {
+				sb.append(years).append(if (longText) " years" else "y")
+			}
+			if (remainingDays > 0) {
+				sb.append(remainingDays).append(if (longText) " days" else "d")
 			}
 			if (hours > 0) {
-				sb.append(hours).append("h")
+				sb.append(hours).append(if (longText) " hours" else "h")
 			}
 			if (minutes > 0) {
-				sb.append(minutes).append("m")
+				sb.append(minutes).append(if (longText) " minutes" else "m")
 			}
 			val milliTime = nanoseconds / 1_000_000
 			val deciseconds = milliTime / 100
 			if (millis) {
 				sb.append(seconds).append("s")
-				sb.append(milliTime).append("ms")
+				sb.append(milliTime).append(if (longText) " milliseconds" else "ms")
 			} else if (duration.absoluteValue < 5.seconds && deciseconds != 0) {
-				sb.append(seconds).append('.').append(deciseconds.digitToChar()).append("s")
+				sb.append(seconds).append('.').append(deciseconds.digitToChar()).append(if (longText) " seconds" else "s")
 			} else {
-				sb.append(seconds).append("s")
+				sb.append(seconds).append(if (longText) " seconds" else "s")
 			}
 			Unit
 		}
 		return sb.toString()
 	}
+
+	fun formatAbsoluteTimespan(duration: Duration, longText: Boolean = false): String {
+		if (duration.isInfinite()) {
+			return if (duration.isPositive()) "∞"
+			else "-∞"
+		}
+		val sb = StringBuilder()
+		if (duration.isNegative()) sb.append("-")
+		duration.toComponents { days, hours, minutes, seconds, nanoseconds ->
+			val years = days / 365
+			val remainingDays = days % 365
+			val millis = nanoseconds / 1_000_000
+			val result = when {
+				years > 0 -> "${years}${if (longText) " years" else "y"}"
+				remainingDays > 0 -> "${remainingDays}${if (longText) " days" else "d"}"
+				hours > 0 -> "${hours}${if (longText) " hours" else "h"}"
+				minutes > 0 -> "${minutes}${if (longText) " minutes" else "m"}"
+				seconds > 0 -> "${seconds}${if (longText) " seconds" else "s"}"
+				millis > 0 -> "${millis}${if (longText) " milliseconds" else "ms"}"
+				else -> "0s"
+			}
+			sb.append(result)
+		}
+		return sb.toString()
+	}
+
+	fun formatUnixTimestamp(unixTimestamp: Long): String {
+		val dateTime = Instant.ofEpochMilli(unixTimestamp).atZone(ZoneId.systemDefault())
+		return DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss").format(dateTime)
+	}
+
 
 	fun debugPath(path: Path): Text {
 		if (!path.exists()) {

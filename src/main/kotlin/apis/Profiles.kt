@@ -1,5 +1,3 @@
-
-
 @file:UseSerializers(DashlessUUIDSerializer::class, InstantAsLongSerializer::class)
 
 package moe.nea.firmament.apis
@@ -19,8 +17,6 @@ import moe.nea.firmament.util.json.InstantAsLongSerializer
 import net.minecraft.util.DyeColor
 import net.minecraft.util.Formatting
 import java.util.*
-import kotlin.reflect.KProperty1
-
 
 @Serializable
 data class CollectionSkillData(
@@ -64,19 +60,19 @@ data class Profile(
     val members: Map<UUID, Member>,
 )
 
-enum class Skill(val accessor: KProperty1<Member, Double>, val color: DyeColor, val icon: SkyblockId) {
-    FARMING(Member::experienceSkillFarming, DyeColor.YELLOW, SkyblockId("ROOKIE_HOE")),
-    FORAGING(Member::experienceSkillForaging, DyeColor.BROWN, SkyblockId("TREECAPITATOR_AXE")),
-    MINING(Member::experienceSkillMining, DyeColor.LIGHT_GRAY, SkyblockId("DIAMOND_PICKAXE")),
-    ALCHEMY(Member::experienceSkillAlchemy, DyeColor.PURPLE, SkyblockId("BREWING_STAND")),
-    TAMING(Member::experienceSkillTaming, DyeColor.GREEN, SkyblockId("SUPER_EGG")),
-    FISHING(Member::experienceSkillFishing, DyeColor.BLUE, SkyblockId("FARMER_ROD")),
-    RUNECRAFTING(Member::experienceSkillRunecrafting, DyeColor.PINK, SkyblockId("MUSIC_RUNE;1")),
-    CARPENTRY(Member::experienceSkillCarpentry, DyeColor.ORANGE, SkyblockId("WORKBENCH")),
-    COMBAT(Member::experienceSkillCombat, DyeColor.RED, SkyblockId("UNDEAD_SWORD")),
-    SOCIAL(Member::experienceSkillSocial, DyeColor.WHITE, SkyblockId("EGG_HUNT")),
-    ENCHANTING(Member::experienceSkillEnchanting, DyeColor.MAGENTA, SkyblockId("ENCHANTMENT_TABLE")),
-    ;
+enum class Skill(val accessor: (Member) -> Double, val color: DyeColor, val icon: SkyblockId) {
+	FARMING({ it.playerData.skills.farming }, DyeColor.YELLOW, SkyblockId("ROOKIE_HOE")),
+	FORAGING({ it.playerData.skills.foraging }, DyeColor.BROWN, SkyblockId("TREECAPITATOR_AXE")),
+	MINING({ it.playerData.skills.mining }, DyeColor.LIGHT_GRAY, SkyblockId("DIAMOND_PICKAXE")),
+	ALCHEMY({ it.playerData.skills.alchemy }, DyeColor.PURPLE, SkyblockId("BREWING_STAND")),
+	TAMING({ it.playerData.skills.taming }, DyeColor.GREEN, SkyblockId("SUPER_EGG")),
+	FISHING({ it.playerData.skills.fishing }, DyeColor.BLUE, SkyblockId("FARMER_ROD")),
+	RUNECRAFTING({ it.playerData.skills.runecrafting }, DyeColor.PINK, SkyblockId("MUSIC_RUNE;1")),
+	CARPENTRY({ it.playerData.skills.carpentry }, DyeColor.ORANGE, SkyblockId("WORKBENCH")),
+	COMBAT({ it.playerData.skills.combat }, DyeColor.RED, SkyblockId("UNDEAD_SWORD")),
+	SOCIAL({ it.playerData.skills.social }, DyeColor.WHITE, SkyblockId("EGG_HUNT")),
+	ENCHANTING({ it.playerData.skills.enchanting }, DyeColor.MAGENTA, SkyblockId("ENCHANTMENT_TABLE")),
+	;
 
     fun getMaximumLevel(leveling: Leveling) = assertNotNullOr(leveling.maximumLevels[name.lowercase()]) { 50 }
 
@@ -103,33 +99,101 @@ value class CollectionType(val string: String) {
 }
 
 @Serializable
+data class MemberPlayerDataSkills (
+	@SerialName("SKILL_FISHING") val fishing: Double = 0.0,
+	@SerialName("SKILL_ALCHEMY") val alchemy: Double = 0.0,
+	@SerialName("SKILL_RUNECRAFTING") val runecrafting: Double = 0.0,
+	@SerialName("SKILL_MINING") val mining: Double = 0.0,
+	@SerialName("SKILL_FARMING") val farming: Double = 0.0,
+	@SerialName("SKILL_ENCHANTING") val enchanting: Double = 0.0,
+	@SerialName("SKILL_TAMING") val taming: Double = 0.0,
+	@SerialName("SKILL_FORAGING") val foraging: Double = 0.0,
+	@SerialName("SKILL_SOCIAL") val social: Double = 0.0,
+	@SerialName("SKILL_CARPENTRY") val carpentry: Double = 0.0,
+	@SerialName("SKILL_COMBAT") val combat: Double = 0.0,
+)
+
+@Serializable
+data class MemberPlayerData (
+	@SerialName("experience") val skills: MemberPlayerDataSkills = MemberPlayerDataSkills(),
+	@SerialName("death_count") val deaths: Double = 0.0
+)
+
+@Serializable
+data class MemberCurrenciesEssenceItem (
+	@SerialName("current") val current: Double = 0.0
+)
+
+@Serializable
+data class MemberCurrenciesEssence (
+	@SerialName("DRAGON") val dragon: MemberCurrenciesEssenceItem = MemberCurrenciesEssenceItem(),
+	@SerialName("DIAMOND") val diamond: MemberCurrenciesEssenceItem = MemberCurrenciesEssenceItem(),
+	@SerialName("SPIDER") val spider: MemberCurrenciesEssenceItem = MemberCurrenciesEssenceItem(),
+	@SerialName("GOLD") val gold: MemberCurrenciesEssenceItem = MemberCurrenciesEssenceItem(),
+	@SerialName("UNDEAD") val undead: MemberCurrenciesEssenceItem = MemberCurrenciesEssenceItem(),
+	@SerialName("WITHER") val wither: MemberCurrenciesEssenceItem = MemberCurrenciesEssenceItem(),
+	@SerialName("ICE") val ice: MemberCurrenciesEssenceItem = MemberCurrenciesEssenceItem()
+)
+
+@Serializable
+data class MemberCurrencies (
+	@SerialName("coin_purse") val coinPurse: Double = 0.0,
+	@SerialName("motes_purse") val motesPurse: Double = 0.0,
+	@SerialName("essence") val essence: MemberCurrenciesEssence = MemberCurrenciesEssence()
+)
+
+@Serializable
+data class MemberProfile (
+	@SerialName("first_join") val firstJoin: Double = 0.0,
+	@SerialName("bank_account") val bankAccount: Double = 0.0,
+	@SerialName("cookie_buff_active") val cookie: Boolean = false
+)
+
+@Serializable
+data class MemberFairySouls (
+	@SerialName("fairy_exchanges") val exchanges: Double = 0.0,
+	@SerialName("total_collected") val collected: Double = 0.0,
+	@SerialName("unspent_souls") val unspent: Double = 0.0
+)
+
+@Serializable
+data class MemberPlayerStatsPetsMilestone (
+	@SerialName("ores_mined") val oresMined: Double = 0.0,
+	@SerialName("sea_creatures_killed") val seaCreaturesKilled: Double = 0.0
+)
+
+@Serializable
+data class MemberPlayerStatsPets (
+	@SerialName("milestone") val milestone: MemberPlayerStatsPetsMilestone = MemberPlayerStatsPetsMilestone()
+)
+
+@Serializable
+data class MemberPlayerStatsAuctions (
+	@SerialName("bids") val bids: Double = 0.0,
+	@SerialName("highest_bid") val highestBid: Double = 0.0,
+	@SerialName("created") val auctionsCreated: Double = 0.0,
+	@SerialName("won") val auctionsWon: Double = 0.0,
+	@SerialName("gold_spent") val goldSpent: Double = 0.0,
+	@SerialName("gold_earned") val goldEarned: Double = 0.0,
+)
+
+@Serializable
+data class MemberPlayerStats (
+	@SerialName("highest_critical_damage") val highestCriticalDamage: Double = 0.0,
+	@SerialName("highest_damage") val highestDamage: Double = 0.0,
+	@SerialName("sea_creature_kills") val seaCreatureKills: Double = 0.0,
+	@SerialName("pets") val pets: MemberPlayerStatsPets = MemberPlayerStatsPets(),
+	@SerialName("auctions") val auctions: MemberPlayerStatsAuctions = MemberPlayerStatsAuctions()
+)
+
+@Serializable
 data class Member(
-    val pets: List<Pet> = listOf(),
-    @SerialName("coop_invitation")
-    val coopInvitation: CoopInvitation? = null,
-    @SerialName("experience_skill_farming")
-    val experienceSkillFarming: Double = 0.0,
-    @SerialName("experience_skill_alchemy")
-    val experienceSkillAlchemy: Double = 0.0,
-    @SerialName("experience_skill_combat")
-    val experienceSkillCombat: Double = 0.0,
-    @SerialName("experience_skill_taming")
-    val experienceSkillTaming: Double = 0.0,
-    @SerialName("experience_skill_social2")
-    val experienceSkillSocial: Double = 0.0,
-    @SerialName("experience_skill_enchanting")
-    val experienceSkillEnchanting: Double = 0.0,
-    @SerialName("experience_skill_fishing")
-    val experienceSkillFishing: Double = 0.0,
-    @SerialName("experience_skill_foraging")
-    val experienceSkillForaging: Double = 0.0,
-    @SerialName("experience_skill_mining")
-    val experienceSkillMining: Double = 0.0,
-    @SerialName("experience_skill_runecrafting")
-    val experienceSkillRunecrafting: Double = 0.0,
-    @SerialName("experience_skill_carpentry")
-    val experienceSkillCarpentry: Double = 0.0,
-    val collection: Map<CollectionType, Long> = mapOf()
+	@SerialName("player_id") val UUID: String,
+	@SerialName("player_data") val playerData: MemberPlayerData = MemberPlayerData(),
+	@SerialName("currencies") val currencies: MemberCurrencies = MemberCurrencies(),
+	@SerialName("profile") val profile: MemberProfile = MemberProfile(),
+	@SerialName("fairy_soul") val fairySoul: MemberFairySouls = MemberFairySouls(),
+	@SerialName("player_stats") val playerStats: MemberPlayerStats = MemberPlayerStats(),
 )
 
 @Serializable
