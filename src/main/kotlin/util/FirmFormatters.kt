@@ -36,14 +36,14 @@ object FirmFormatters {
 		}
 	}
 
-	fun shortFormat(double: Double): String {
+	fun shortFormat(double: Double, decimals: Int = 1): String {
 		if (double < 0) return "-" + shortFormat(-double)
 		shortIf(double, 1_000_000_000_000.0, "t") { return it }
 		shortIf(double, 1_000_000_000.0, "b") { return it }
 		shortIf(double, 1_000_000.0, "m") { return it }
 		shortIf(double, 1_000.0, "k") { return it }
 		shortIf(double, 1.0, "") { return it }
-		return double.toString()
+		return formatDecimal(double, decimals).toString()
 	}
 
 	fun formatCommas(int: Int, segments: Int = 3): String = formatCommas(int.toLong(), segments)
@@ -176,7 +176,11 @@ object FirmFormatters {
 		return Text.literal("x: ${position.x}, y: ${position.y}, z: ${position.z}")
 	}
 
+	fun formatDecimal(value: Double, decimals: Int = 1): String {
+		return "%.${decimals}f".format(value)
+	}
+
 	fun formatPercent(value: Double, decimals: Int = 1): String {
-		return "%.${decimals}f%%".format(value * 100)
+		return formatDecimal(value * 100, decimals) + "%"
 	}
 }

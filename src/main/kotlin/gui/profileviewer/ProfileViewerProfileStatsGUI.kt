@@ -1,5 +1,6 @@
 package moe.nea.firmament.gui.profileviewer
 
+import io.github.notenoughupdates.moulconfig.observer.ObservableList
 import io.github.notenoughupdates.moulconfig.xml.Bind
 import moe.nea.firmament.apis.Member
 import moe.nea.firmament.apis.Profile
@@ -7,18 +8,14 @@ import moe.nea.firmament.util.FirmFormatters.formatAbsoluteTimespan
 import moe.nea.firmament.util.FirmFormatters.shortFormat
 import moe.nea.firmament.util.FirmFormatters.formatCommas
 import moe.nea.firmament.util.FirmFormatters.formatUnixTimestamp
-import java.util.UUID
 import kotlin.time.Duration.Companion.milliseconds
 import net.minecraft.text.Text
 
-class ProfileViewerProfileStatsGUI(UUID: UUID, username: String, profile: Profile) {
-
-	val member: Member = profile.members[UUID] ?: error("Primary player not in profile")
-
+class ProfileViewerProfileStatsGUI(val profile: Profile, val member: Member) {
 	@Bind("purse") fun getPurse(): String = Text.stringifiedTranslatable("firmament.pv.profilestats.purse", shortFormat(member.currencies.coinPurse)).string
 	@Bind("purseToolTip") fun getPurseToolTip(): List<String> = listOf(formatCommas(member.currencies.coinPurse.toInt()))
-	@Bind("bankPurse") fun getBankPurse(): String = Text.stringifiedTranslatable("firmament.pv.profilestats.bank", shortFormat(member.profile.bankAccount)).string
-	@Bind("bankPurseToolTip") fun getBankPurseToolTip(): List<String> = listOf(formatCommas(member.profile.bankAccount.toInt()))
+	@Bind("bankPurse") fun getBankPurse(): String = Text.stringifiedTranslatable("firmament.pv.profilestats.bank", shortFormat(profile.bank.balance), shortFormat(member.profile.bankAccount)).string
+	@Bind("bankPurseToolTip") fun getBankPurseToolTip(): List<String> = listOf(Text.stringifiedTranslatable("firmament.pv.profilestats.bankToolTip.co-op", formatCommas(profile.bank.balance.toInt())).string, Text.stringifiedTranslatable("firmament.pv.profilestats.bankToolTip.personal", formatCommas(member.profile.bankAccount.toInt())).string)
 	@Bind("timeJoined") fun getTimeJoined(): String = Text.stringifiedTranslatable("firmament.pv.profilestats.joined", formatAbsoluteTimespan((System.currentTimeMillis() - member.profile.firstJoin).milliseconds, true)).string
 	@Bind("timeJoinedToolTip") fun getTimeJoinedTooltip(): List<String> = listOf(formatUnixTimestamp(member.profile.firstJoin.toLong()))
 	@Bind("cookie") fun getCookie(): String = Text.stringifiedTranslatable("firmament.pv.profilestats.cookie", if (member.profile.cookie) "active" else "inactive").string
@@ -50,5 +47,59 @@ class ProfileViewerProfileStatsGUI(UUID: UUID, username: String, profile: Profil
 	@Bind("goldSpentToolTip") fun getGoldSpentToolTip(): List<String> = listOf(formatCommas(member.playerStats.auctions.goldSpent.toInt()))
 	@Bind("goldEarned") fun getGoldEarned(): String = Text.stringifiedTranslatable("firmament.pv.profilestats.goldEarned", shortFormat(member.playerStats.auctions.goldEarned)).string
 	@Bind("goldEarnedToolTip") fun getGoldEarnedToolTip(): List<String> = listOf(formatCommas(member.playerStats.auctions.goldEarned.toInt()))
+
+	@Bind("oresMined") fun getOresMined(): String = Text.stringifiedTranslatable("firmament.pv.profilestats.oresMined", shortFormat(member.playerStats.pets.milestone.oresMined)).string
+	@Bind("oresMinedToolTip") fun getOresMinedToolTip(): List<String> = listOf(formatCommas(member.playerStats.pets.milestone.oresMined.toInt()))
+	@Bind("seaCreaturesKilled") fun getSeaCreaturesKilled(): String = Text.stringifiedTranslatable("firmament.pv.profilestats.seaCreaturesKilled", shortFormat(member.playerStats.pets.milestone.seaCreaturesKilled)).string
+	@Bind("seaCreaturesKilledToolTip") fun getSeaCreaturesKilledToolTip(): List<String> = listOf(formatCommas(member.playerStats.pets.milestone.seaCreaturesKilled.toInt()))
+	@Bind("itemsFished") fun getItemsFished(): String = Text.stringifiedTranslatable("firmament.pv.profilestats.itemsFished", shortFormat(member.playerStats.itemsFished.total)).string
+	@Bind("itemsFishedToolTip") fun getItemsFishedToolTip(): List<String> = listOf(formatCommas(member.playerStats.itemsFished.total.toInt()))
+	@Bind("treasuresFished") fun getTreasuresFished(): String = Text.stringifiedTranslatable("firmament.pv.profilestats.treasuresFished", shortFormat(member.playerStats.itemsFished.treasure)).string
+	@Bind("treasuresFishedToolTip") fun getTreasuresFishedToolTip(): List<String> = listOf(formatCommas(member.playerStats.itemsFished.treasure.toInt()))
+	@Bind("largeTreasuresFished") fun getLargeTreasuresFished(): String = Text.stringifiedTranslatable("firmament.pv.profilestats.largeTreasuresFished", shortFormat(member.playerStats.itemsFished.largeTreasure)).string
+	@Bind("largeTreasuresFishedToolTip") fun getLargeTreasuresFishedToolTip(): List<String> = listOf(formatCommas(member.playerStats.itemsFished.largeTreasure.toInt()))
+
+	@Bind("fairySouls") fun getFairySouls(): String = Text.stringifiedTranslatable("firmament.pv.profilestats.fairySouls", shortFormat(member.fairySoul.collected), 247).string
+
+	data class GUIKill(
+		val name: String,
+		val amount: Double
+	) {
+		@Bind("kill") fun getKill(): String = Text.stringifiedTranslatable("firmament.pv.profilestats.kills", name, shortFormat(amount)).string
+		@Bind("killToolTip") fun getKillToolTip(): List<String> = listOf(Text.stringifiedTranslatable("firmament.pv.profilestats.killsToolTip", name, formatCommas(amount.toInt())).string)
+	}
+
+	data class GUIDeath(
+		val name: String,
+		val amount: Double
+	) {
+		@Bind("death") fun getKill(): String = Text.stringifiedTranslatable("firmament.pv.profilestats.deaths", name, shortFormat(amount)).string
+		@Bind("deathToolTip") fun getKillToolTip(): List<String> = listOf(Text.stringifiedTranslatable("firmament.pv.profilestats.deathsToolTip", name, formatCommas(amount.toInt())).string)
+	}
+
+	fun parseKills(data: Map<String, Double>?): Map<String, Double> {
+		val killsMap = data ?: emptyMap()
+		return mapOf("total" to killsMap.values.sum()) + killsMap.filterKeys { it != "total" }.toList().sortedByDescending { (_, value) -> value }.toMap()
+	}
+
+	@Bind("kills") fun getKills(): ObservableList<GUIKill> {
+		val parsedKills = ObservableList<GUIKill>(mutableListOf())
+		val kills = parseKills(member.playerStats.kills)
+
+		kills["total"]?.let { total -> parsedKills.add(GUIKill("total", total)) }
+		kills.filterKeys { it != "total" }.entries.take(5).forEach { (key, value) -> parsedKills.add(GUIKill(key, value)) }
+
+		return parsedKills
+	}
+
+	@Bind("deaths") fun getDeaths(): ObservableList<GUIDeath> {
+		val parsedDeaths = ObservableList<GUIDeath>(mutableListOf())
+		val deaths = parseKills(member.playerStats.deaths)
+
+		deaths["total"]?.let { total -> parsedDeaths.add(GUIDeath("total", total)) }
+		deaths.filterKeys { it != "total" }.entries.take(5).forEach { (key, value) -> parsedDeaths.add(GUIDeath(key, value)) }
+
+		return parsedDeaths
+	}
 
 }

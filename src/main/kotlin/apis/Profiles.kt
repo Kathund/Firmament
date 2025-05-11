@@ -58,6 +58,12 @@ data class Profile(
     val cuteName: String,
     val selected: Boolean = false,
     val members: Map<UUID, Member>,
+	@SerialName("banking") val bank: ProfileBanking = ProfileBanking(),
+)
+
+@Serializable
+data class ProfileBanking(
+	@SerialName("balance") val balance: Double = 0.0,
 )
 
 enum class Skill(val accessor: (Member) -> Double, val color: DyeColor, val icon: SkyblockId) {
@@ -178,12 +184,23 @@ data class MemberPlayerStatsAuctions (
 )
 
 @Serializable
+data class MemberPlayerStatsItemsFished (
+	@SerialName("total") val total: Double = 0.0,
+	@SerialName("normal") val normal: Double = 0.0,
+	@SerialName("treasure") val treasure: Double = 0.0,
+	@SerialName("large_treasure") val largeTreasure: Double = 0.0,
+)
+
+@Serializable
 data class MemberPlayerStats (
 	@SerialName("highest_critical_damage") val highestCriticalDamage: Double = 0.0,
 	@SerialName("highest_damage") val highestDamage: Double = 0.0,
 	@SerialName("sea_creature_kills") val seaCreatureKills: Double = 0.0,
 	@SerialName("pets") val pets: MemberPlayerStatsPets = MemberPlayerStatsPets(),
-	@SerialName("auctions") val auctions: MemberPlayerStatsAuctions = MemberPlayerStatsAuctions()
+	@SerialName("auctions") val auctions: MemberPlayerStatsAuctions = MemberPlayerStatsAuctions(),
+	@SerialName("items_fished") val itemsFished: MemberPlayerStatsItemsFished = MemberPlayerStatsItemsFished(),
+	@SerialName("kills") val kills: Map<String, Double> = emptyMap(),
+	@SerialName("deaths") val deaths: Map<String, Double> = emptyMap()
 )
 
 @Serializable

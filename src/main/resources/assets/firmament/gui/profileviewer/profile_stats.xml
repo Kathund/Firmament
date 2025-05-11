@@ -3,149 +3,143 @@
 	<Gui>
 		<ScrollPanel width="600" height="300">
 			<Panel background="TRANSPARENT" insets="8">
-				<Column>
-					<Row>
-						<Panel background="DARK_RECT" insets="4">
-							<Column>
-								<firm:Hover lines="@purseToolTip">
-									<Text text="@purse"/>
-								</firm:Hover>
-								<firm:Hover lines="@bankPurseToolTip">
-									<Text text="@bankPurse"/>
-								</firm:Hover>
-								<firm:Hover lines="@timeJoinedToolTip">
-									<Text text="@timeJoined"/>
-								</firm:Hover>
-								<Text text="@cookie"/>
-							</Column>
-						</Panel>
+				<Center>
+					<Column>
+						<Row>
+							<Panel background="VANILLA" insets="4">
+								<Column>
+									<firm:Hover lines="@purseToolTip">
+										<Text text="@purse"/>
+									</firm:Hover>
+									<firm:Hover lines="@bankPurseToolTip">
+										<Text text="@bankPurse"/>
+									</firm:Hover>
+									<firm:Hover lines="@timeJoinedToolTip">
+										<Text text="@timeJoined"/>
+									</firm:Hover>
+									<Text text="@cookie"/>
+								</Column>
+							</Panel>
 
-						<Spacer width="8"/>
+							<Spacer width="8"/>
 
-						<Panel background="DARK_RECT" insets="4">
-							<Column>
-								<firm:Hover lines="@dragonEssenceToolTip">
-									<Text text="@dragonEssence"/>
-								</firm:Hover>
-								<firm:Hover lines="@diamondEssenceToolTip">
-									<Text text="@diamondEssence"/>
-								</firm:Hover>
-								<firm:Hover lines="@spiderEssenceToolTip">
-									<Text text="@spiderEssence"/>
-								</firm:Hover>
-								<firm:Hover lines="@goldEssenceToolTip">
-									<Text text="@goldEssence"/>
-								</firm:Hover>
-								<firm:Hover lines="@undeadEssenceToolTip">
-									<Text text="@undeadEssence"/>
-								</firm:Hover>
-								<firm:Hover lines="@witherEssenceToolTip">
-									<Text text="@witherEssence"/>
-								</firm:Hover>
-								<firm:Hover lines="@iceEssenceToolTip">
-									<Text text="@iceEssence"/>
-								</firm:Hover>
-							</Column>
-						</Panel>
+							<Panel background="VANILLA" insets="4">
+								<Column>
+									<firm:Hover lines="@auctionBidsToolTip">
+										<Text text="@auctionBids"/>
+									</firm:Hover>
+									<firm:Hover lines="@highestBidToolTip">
+										<Text text="@highestBid"/>
+									</firm:Hover>
+									<firm:Hover lines="@auctionsWonToolTip">
+										<Text text="@auctionsWon"/>
+									</firm:Hover>
+									<firm:Hover lines="@auctionsCreatedToolTip">
+										<Text text="@auctionsCreated"/>
+									</firm:Hover>
+									<firm:Hover lines="@goldSpentToolTip">
+										<Text text="@goldSpent"/>
+									</firm:Hover>
+									<firm:Hover lines="@goldEarnedToolTip">
+										<Text text="@goldEarned"/>
+									</firm:Hover>
+								</Column>
+							</Panel>
 
-						<Spacer width="8"/>
+							<Spacer width="8"/>
 
-						<Panel background="DARK_RECT" insets="4">
-							<Column>
-								<firm:Hover lines="@auctionBidsToolTip">
-									<Text text="@auctionBids"/>
-								</firm:Hover>
-								<firm:Hover lines="@highestBidToolTip">
-									<Text text="@highestBid"/>
-								</firm:Hover>
-								<firm:Hover lines="@auctionsWonToolTip">
-									<Text text="@auctionsWon"/>
-								</firm:Hover>
-								<firm:Hover lines="@auctionsCreatedToolTip">
-									<Text text="@auctionsCreated"/>
-								</firm:Hover>
-								<firm:Hover lines="@goldSpentToolTip">
-									<Text text="@goldSpent"/>
-								</firm:Hover>
-								<firm:Hover lines="@goldEarnedToolTip">
-									<Text text="@goldEarned"/>
-								</firm:Hover>
-							</Column>
-						</Panel>
-					</Row>
+							<Panel background="VANILLA" insets="4">
+								<Column>
+									<firm:Hover lines="@oresMinedToolTip">
+										<Text text="@oresMined"/>
+									</firm:Hover>
+									<firm:Hover lines="@seaCreaturesKilledToolTip">
+										<Text text="@seaCreaturesKilled"/>
+									</firm:Hover>
+									<firm:Hover lines="@itemsFishedToolTip">
+										<Text text="@itemsFished"/>
+									</firm:Hover>
+									<firm:Hover lines="@treasuresFishedToolTip">
+										<Text text="@treasuresFished"/>
+									</firm:Hover>
+									<firm:Hover lines="@largeTreasuresFishedToolTip">
+										<Text text="@largeTreasuresFished"/>
+									</firm:Hover>
+								</Column>
+							</Panel>
 
-					<Spacer height="8"/>
+							<Spacer width="8"/>
 
-					<Row>
-						<Panel background="DARK_RECT" insets="4">
-							<Column>
-								<firm:Hover lines="@purseToolTip">
-									<Text text="@purse"/>
-								</firm:Hover>
-								<firm:Hover lines="@bankPurseToolTip">
-									<Text text="@bankPurse"/>
-								</firm:Hover>
-								<firm:Hover lines="@timeJoinedToolTip">
-									<Text text="@timeJoined"/>
-								</firm:Hover>
-								<Text text="@cookie"/>
-							</Column>
-						</Panel>
+							<Panel background="VANILLA" insets="4">
+								<Column>
+									<Array data="kills">
+										<firm:Hover lines="@killToolTip">
+											<Text text="@kill"/>
+										</firm:Hover>
+									</Array>
+								</Column>
+							</Panel>
+						</Row>
 
-						<Spacer width="8"/>
+						<Spacer height="16"/>
 
-						<Panel background="DARK_RECT" insets="4">
-							<Column>
-								<firm:Hover lines="@dragonEssenceToolTip">
-									<Text text="@dragonEssence"/>
-								</firm:Hover>
-								<firm:Hover lines="@diamondEssenceToolTip">
-									<Text text="@diamondEssence"/>
-								</firm:Hover>
-								<firm:Hover lines="@spiderEssenceToolTip">
-									<Text text="@spiderEssence"/>
-								</firm:Hover>
-								<firm:Hover lines="@goldEssenceToolTip">
-									<Text text="@goldEssence"/>
-								</firm:Hover>
-								<firm:Hover lines="@undeadEssenceToolTip">
-									<Text text="@undeadEssence"/>
-								</firm:Hover>
-								<firm:Hover lines="@witherEssenceToolTip">
-									<Text text="@witherEssence"/>
-								</firm:Hover>
-								<firm:Hover lines="@iceEssenceToolTip">
-									<Text text="@iceEssence"/>
-								</firm:Hover>
-							</Column>
-						</Panel>
+						<Row>
+							<Panel background="VANILLA" insets="4">
+								<Column>
+									<Text text="@fairySouls"/>
+								</Column>
+							</Panel>
 
-						<Spacer width="8"/>
+							<Spacer width="8"/>
 
-						<Panel background="DARK_RECT" insets="4">
-							<Column>
-								<firm:Hover lines="@auctionBidsToolTip">
-									<Text text="@auctionBids"/>
-								</firm:Hover>
-								<firm:Hover lines="@highestBidToolTip">
-									<Text text="@highestBid"/>
-								</firm:Hover>
-								<firm:Hover lines="@auctionsWonToolTip">
-									<Text text="@auctionsWon"/>
-								</firm:Hover>
-								<firm:Hover lines="@auctionsCreatedToolTip">
-									<Text text="@auctionsCreated"/>
-								</firm:Hover>
-								<firm:Hover lines="@goldSpentToolTip">
-									<Text text="@goldSpent"/>
-								</firm:Hover>
-								<firm:Hover lines="@goldEarnedToolTip">
-									<Text text="@goldEarned"/>
-								</firm:Hover>
-							</Column>
-						</Panel>
-					</Row>
-				</Column>
+							<Panel background="VANILLA" insets="4">
+								<Column>
+									<firm:Hover lines="@dragonEssenceToolTip">
+										<Text text="@dragonEssence"/>
+									</firm:Hover>
+									<firm:Hover lines="@diamondEssenceToolTip">
+										<Text text="@diamondEssence"/>
+									</firm:Hover>
+									<firm:Hover lines="@spiderEssenceToolTip">
+										<Text text="@spiderEssence"/>
+									</firm:Hover>
+									<firm:Hover lines="@goldEssenceToolTip">
+										<Text text="@goldEssence"/>
+									</firm:Hover>
+									<firm:Hover lines="@undeadEssenceToolTip">
+										<Text text="@undeadEssence"/>
+									</firm:Hover>
+									<firm:Hover lines="@witherEssenceToolTip">
+										<Text text="@witherEssence"/>
+									</firm:Hover>
+									<firm:Hover lines="@iceEssenceToolTip">
+										<Text text="@iceEssence"/>
+									</firm:Hover>
+								</Column>
+							</Panel>
+
+							<Spacer width="8"/>
+
+							<Panel background="VANILLA" insets="4">
+								<Column>
+									<Text text="@fairySouls"/>
+								</Column>
+							</Panel>
+
+							<Spacer width="8"/>
+
+							<Panel background="VANILLA" insets="4">
+								<Column>
+									<Array data="deaths">
+										<firm:Hover lines="@deathToolTip">
+											<Text text="@death"/>
+										</firm:Hover>
+									</Array>
+								</Column>
+							</Panel>
+						</Row>
+					</Column>
+				</Center>
 			</Panel>
 		</ScrollPanel>
 	</Gui>

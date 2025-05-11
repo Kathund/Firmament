@@ -20,8 +20,8 @@ class ProfileViewer(playerUsername: String) {
 				val name = Routes.getPlayerNameForUUID(uuid) ?: name
 				val names = mapOf(uuid to (name))
 
-				val data = Routes.getAccountData(uuid)
-				if (data == null) {
+				val accountData = Routes.getAccountData(uuid)
+				if (accountData == null) {
 					source.sendError(Text.stringifiedTranslatable("firmament.pv.neverjoined", name))
 					return
 				}
@@ -40,7 +40,7 @@ class ProfileViewer(playerUsername: String) {
 
 				ScreenUtil.setScreenLater(MoulConfigUtils.loadScreen(
 					"profileviewer/main",
-					ProfileViewerMainGUI(uuid, name, profile),
+					ProfileViewerMainGUI(uuid, name, profile, accountData),
 					null))
 			} catch (e: Exception) {
 				Firmament.logger.error("Error loading profile data for $name", e)

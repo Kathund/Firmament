@@ -9,10 +9,7 @@ import moe.nea.firmament.apis.Profile
 import moe.nea.firmament.apis.Skill
 import moe.nea.firmament.repo.RepoManager
 
-class ProfileViewerSkillsGUI(UUID: UUID, username: String, profile: Profile) {
-
-	val member: Member = profile.members[UUID] ?: error("Primary player not in profile")
-
+class ProfileViewerSkillsGUI(val profile: Profile, val member: Member) {
 	data class GUISkill(
 		@get:Bind("skillName") val name: String,
 		@get:Bind("skillExp") val exp: Double,
