@@ -9,6 +9,7 @@ import io.github.notenoughupdates.moulconfig.gui.GuiContext
 import io.github.notenoughupdates.moulconfig.gui.GuiImmediateContext
 import io.github.notenoughupdates.moulconfig.gui.KeyboardEvent
 import io.github.notenoughupdates.moulconfig.gui.MouseEvent
+import io.github.notenoughupdates.moulconfig.gui.component.PanelComponent
 import io.github.notenoughupdates.moulconfig.observer.GetSetter
 import io.github.notenoughupdates.moulconfig.platform.ModernRenderContext
 import io.github.notenoughupdates.moulconfig.xml.ChildCount
@@ -20,6 +21,7 @@ import java.io.File
 import java.util.function.Supplier
 import javax.xml.namespace.QName
 import me.shedaniel.math.Color
+import org.jetbrains.annotations.Unmodifiable
 import org.w3c.dom.Element
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.seconds
@@ -35,6 +37,19 @@ import moe.nea.firmament.gui.TickComponent
 import moe.nea.firmament.util.render.isUntranslatedGuiDrawContext
 
 object MoulConfigUtils {
+	@JvmStatic
+	fun main(args: Array<out String>) {
+		generateXSD(File("MoulConfig.xsd"), XMLUniverse.MOULCONFIG_XML_NS)
+		generateXSD(File("MoulConfig.Firmament.xsd"), firmUrl)
+		File("wrapper.xsd").writeText("""
+<?xml version="1.0" encoding="UTF-8" ?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema">
+    <xs:import namespace="http://notenoughupdates.org/moulconfig" schemaLocation="MoulConfig.xsd"/>
+    <xs:import namespace="http://firmament.nea.moe/moulconfig" schemaLocation="MoulConfig.Firmament.xsd"/>
+</xs:schema>
+        """.trimIndent())
+	}
+
 	val firmUrl = "http://firmament.nea.moe/moulconfig"
 	val universe = XMLUniverse.getDefaultUniverse().also { uni ->
 		uni.registerMapper(java.awt.Color::class.java) {
@@ -179,10 +194,8 @@ object MoulConfigUtils {
 		uni.registerLoader(object : XMLGuiLoader.Basic<FixedComponent> {
 			override fun createInstance(context: XMLContext<*>, element: Element): FixedComponent {
 				return FixedComponent(
-					context.getPropertyFromAttribute(element, QName("width"), Int::class.java)
-						?: error("Requires width specified"),
-					context.getPropertyFromAttribute(element, QName("height"), Int::class.java)
-						?: error("Requires height specified"),
+					context.getPropertyFromAttribute(element, QName("width"), Int::class.java),
+					context.getPropertyFromAttribute(element, QName("height"), Int::class.java),
 					context.getChildFragment(element)
 				)
 			}
@@ -196,7 +209,7 @@ object MoulConfigUtils {
 			}
 
 			override fun getAttributeNames(): Map<String, Boolean> {
-				return mapOf("width" to true, "height" to true)
+				return mapOf("width" to false, "height" to false)
 			}
 		})
 	}
@@ -208,19 +221,6 @@ object MoulConfigUtils {
 		val generator = XSDGenerator(universe, namespace)
 		generator.writeAll()
 		generator.dumpToFile(file)
-	}
-
-	@JvmStatic
-	fun main(args: Array<out String>) {
-		generateXSD(File("MoulConfig.xsd"), XMLUniverse.MOULCONFIG_XML_NS)
-		generateXSD(File("MoulConfig.Firmament.xsd"), firmUrl)
-		File("wrapper.xsd").writeText("""
-<?xml version="1.0" encoding="UTF-8" ?>
-<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema">
-    <xs:import namespace="http://notenoughupdates.org/moulconfig" schemaLocation="MoulConfig.xsd"/>
-    <xs:import namespace="http://firmament.nea.moe/moulconfig" schemaLocation="MoulConfig.Firmament.xsd"/>
-</xs:schema>
-        """.trimIndent())
 	}
 
 	fun loadScreen(name: String, bindTo: Any, parent: Screen?): Screen {

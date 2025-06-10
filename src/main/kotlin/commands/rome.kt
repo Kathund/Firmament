@@ -230,6 +230,15 @@ fun firmamentCommand() = literal("firmament") {
 				}
 			}
 		}
+		thenLiteral("screens") {
+			thenExecute {
+				MC.sendChat(Text.literal("""
+					|Screen: ${MC.screen} (${MC.screen?.title})
+					|Screen Handler: ${MC.handledScreen?.screenHandler} ${MC.handledScreen?.screenHandler?.syncId}
+					|Player Screen Handler: ${MC.player?.currentScreenHandler} ${MC.player?.currentScreenHandler?.syncId}
+				""".trimMargin()))
+			}
+		}
 		thenLiteral("blocks") {
 			thenExecute {
 				ScreenUtil.setScreenLater(MiningBlockInfoUi.makeScreen())

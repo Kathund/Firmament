@@ -29,8 +29,8 @@ import moe.nea.firmament.util.json.DashlessUUIDSerializer
 
 /**
  * A SkyBlock item id, as used by the NEU repo.
- * This is not exactly the format used by HyPixel, but is mostly the same.
- * Usually this id splits an id used by HyPixel into more sub items. For example `PET` becomes `$PET_ID;$PET_RARITY`,
+ * This is not exactly the format used by Hypixel, but is mostly the same.
+ * Usually this id splits an id used by Hypixel into more sub items. For example `PET` becomes `$PET_ID;$PET_RARITY`,
  * with those values extracted from other metadata.
  */
 @JvmInline
@@ -54,7 +54,7 @@ value class SkyblockId(val neuItem: String) : Comparable<SkyblockId> {
 	}
 
 	/**
-	 * A bazaar stock item id, as returned by the HyPixel bazaar api endpoint.
+	 * A bazaar stock item id, as returned by the Hypixel bazaar api endpoint.
 	 * These are not equivalent to the in-game ids, or the NEU repo ids, and in fact, do not refer to items, but instead
 	 * to bazaar stocks. The main difference from [SkyblockId]s is concerning enchanted books. There are probably more,
 	 * but for now this holds.
@@ -202,9 +202,47 @@ val ItemStack.skyBlockId: SkyblockId?
 				else SkyblockId("${enchantName.uppercase()};${enchantmentData.getInt(enchantName).getOrNull()}")
 			}
 
-			// TODO: PARTY_HAT_CRAB{,_ANIMATED,_SLOTH},POTION
+			"ATTRIBUTE_SHARD" -> {
+				val attributeData = extraAttributes.getCompound("attributes").getOrNull()
+				val attributeName = attributeData?.keys?.singleOrNull()
+				if (attributeName == null) SkyblockId("ATTRIBUTE_SHARD")
+				else SkyblockId(
+					"ATTRIBUTE_SHARD_${attributeName.uppercase()};${
+						attributeData.getInt(attributeName).getOrNull()
+					}"
+				)
+			}
+
+			"POTION" -> {
+				val potionData = extraAttributes.getString("potion").getOrNull()
+				val potionName = extraAttributes.getString("potion_name").getOrNull()
+				val potionLevel = extraAttributes.getInt("potion_level").getOrNull()
+				val potionType = extraAttributes.getString("potion_type").getOrNull()
+				when {
+					potionName != null -> SkyblockId("POTION_${potionName.uppercase()};$potionLevel")
+					potionData != null -> SkyblockId("POTION_${potionData.uppercase()};$potionLevel")
+					potionType != null -> SkyblockId("POTION_${potionType.uppercase()}")
+					else -> SkyblockId("WATER_BOTTLE")
+				}
+			}
+
+			"PARTY_HAT_SLOTH", "PARTY_HAT_CRAB", "PARTY_HAT_CRAB_ANIMATED" -> {
+				val partyHatEmoji = extraAttributes.getString("party_hat_emoji").getOrNull()
+				val partyHatYear = extraAttributes.getInt("party_hat_year").getOrNull()
+				val partyHatColor = extraAttributes.getString("party_hat_color").getOrNull()
+				when {
+					partyHatEmoji != null -> SkyblockId("PARTY_HAT_SLOTH_${partyHatEmoji.uppercase()}")
+					partyHatYear == 2022 -> SkyblockId("PARTY_HAT_CRAB_${partyHatColor?.uppercase()}_ANIMATED")
+					else -> SkyblockId("PARTY_HAT_CRAB_${partyHatColor?.uppercase()}")
+				}
+			}
+
+			"BALLOON_HAT_2024" -> {
+				SkyblockId("BALLOON_HAT_2024_${extraAttributes.getString("party_hat_color").getOrNull()?.uppercase()}")
+			}
+
 			else -> {
-				SkyblockId(id)
+				SkyblockId(id.replace(":", "-"))
 			}
 		}
 	}

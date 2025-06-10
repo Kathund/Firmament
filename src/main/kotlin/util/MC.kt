@@ -1,6 +1,7 @@
 package moe.nea.firmament.util
 
 import io.github.moulberry.repo.data.Coordinate
+import io.github.notenoughupdates.moulconfig.gui.GuiComponentWrapper
 import java.util.concurrent.ConcurrentLinkedQueue
 import kotlin.jvm.optionals.getOrNull
 import net.minecraft.client.MinecraftClient
@@ -21,10 +22,10 @@ import net.minecraft.registry.Registry
 import net.minecraft.registry.RegistryKey
 import net.minecraft.registry.RegistryKeys
 import net.minecraft.registry.RegistryWrapper
-import net.minecraft.registry.entry.RegistryEntry
 import net.minecraft.resource.ReloadableResourceManagerImpl
 import net.minecraft.text.Text
 import net.minecraft.util.Identifier
+import net.minecraft.util.Util
 import net.minecraft.util.math.BlockPos
 import net.minecraft.world.World
 import moe.nea.firmament.events.TickEvent
@@ -126,6 +127,12 @@ object MC {
 		}
 		private set
 
+	val currentMoulConfigContext
+		get() = (screen as? GuiComponentWrapper)?.context
+
+	fun openUrl(uri: String) {
+		Util.getOperatingSystem().open(uri)
+	}
 
 	fun <T> unsafeGetRegistryEntry(registry: RegistryKey<out Registry<T>>, identifier: Identifier) =
 		unsafeGetRegistryEntry(RegistryKey.of(registry, identifier))
