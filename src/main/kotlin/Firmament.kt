@@ -26,7 +26,6 @@ import net.fabricmc.loader.api.Version
 import net.fabricmc.loader.api.metadata.ModMetadata
 import org.apache.logging.log4j.LogManager
 import org.apache.logging.log4j.Logger
-import org.spongepowered.asm.launch.MixinBootstrap
 import kotlinx.coroutines.CoroutineName
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
@@ -67,6 +66,8 @@ object Firmament {
 	}
 	val version: Version by lazy { metadata.version }
 
+	private val DEFAULT_JSON_INDENT = "    "
+
 	@OptIn(ExperimentalSerializationApi::class)
 	val json = Json {
 		prettyPrint = DEBUG
@@ -74,10 +75,23 @@ object Firmament {
 		allowTrailingComma = true
 		ignoreUnknownKeys = true
 		encodeDefaults = true
+		prettyPrintIndent = if (prettyPrint) "\t" else DEFAULT_JSON_INDENT
+	}
+
+	/**
+	 * FUCK two space indentation
+	 */
+	val twoSpaceJson = Json(from = json) {
+		prettyPrint = true
+		prettyPrintIndent = "  "
 	}
 	val gson = Gson()
 	val tightJson = Json(from = json) {
 		prettyPrint = false
+		// Reset pretty print indent back to default to prevent getting yelled at by json
+		prettyPrintIndent = DEFAULT_JSON_INDENT
+		encodeDefaults = false
+		explicitNulls = false
 	}
 
 

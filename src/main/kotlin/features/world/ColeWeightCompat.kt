@@ -101,8 +101,8 @@ object ColeWeightCompat {
 			thenLiteral("importcw") {
 				thenExecute {
 					importAndInform(source, null) {
-						Text.stringifiedTranslatable("firmament.command.waypoint.import.cw",
-						                             it)
+						tr("firmament.command.waypoint.import.cw.success",
+							"Imported $it waypoints from ColeWeight.")
 					}
 				}
 			}
