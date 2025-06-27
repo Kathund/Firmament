@@ -5,6 +5,7 @@ import com.mojang.brigadier.StringReader
 import com.mojang.brigadier.exceptions.CommandSyntaxException
 import com.mojang.brigadier.tree.LiteralCommandNode
 import kotlin.time.Duration.Companion.seconds
+import net.minecraft.client.network.PlayerListEntry
 import net.minecraft.util.math.BlockPos
 import moe.nea.firmament.annotations.Subscribe
 import moe.nea.firmament.commands.CaseInsensitiveLiteralCommandNode
@@ -18,6 +19,8 @@ import moe.nea.firmament.util.MC
 import moe.nea.firmament.util.TimeMark
 import moe.nea.firmament.util.tr
 import moe.nea.firmament.util.useMatch
+import kotlin.math.round
+import kotlin.random.Random
 
 object PartyCommands {
 
@@ -57,6 +60,7 @@ object PartyCommands {
 
 		register("warp", "pw", "pwarp", "partywarp") {
 			executes {
+				if (!TConfig.warpCommand) return@executes 0
 				// TODO: add check if you are the party leader
 				MC.sendCommand("p warp")
 				0
@@ -65,6 +69,7 @@ object PartyCommands {
 
 		register("transfer", "pt", "ptme") {
 			executes {
+				if (!TConfig.transferCommand) return@executes 0
 				MC.sendCommand("p transfer ${it.source.name}")
 				0
 			}
@@ -72,6 +77,7 @@ object PartyCommands {
 
 		register("allinvite", "allinv") {
 			executes {
+				if (!TConfig.allinviteCommand) return@executes 0
 				MC.sendCommand("p settings allinvite")
 				0
 			}
@@ -79,11 +85,63 @@ object PartyCommands {
 
 		register("coords") {
 			executes {
+				if (!TConfig.coordsCommand) return@executes 0
 				val p = MC.player?.blockPos ?: BlockPos.ORIGIN
 				MC.sendCommand("pc x: ${p.x}, y: ${p.y}, z: ${p.z}")
 				0
 			}
 		}
+
+		register("ping") {
+			executes {
+				if (!TConfig.pingCommand) return@executes 0
+				val ping = MC.player?.let {
+					val entry: PlayerListEntry? = MC.networkHandler?.getPlayerListEntry(it.uuid)
+					entry?.latency ?: -1
+				} ?: -1
+				MC.sendCommand(
+					"pc ${
+						String.format(
+							tr(
+								"firmament.config.hud.ping-count-hud.display", "Ping: %s ms"
+							).string, ping
+						)
+					}"
+				)
+				0
+			}
+		}
+
+		register("fps") {
+			executes {
+				if (!TConfig.fpsCommand) return@executes 0
+				MC.sendCommand(
+					"pc ${
+						String.format(
+							tr("firmament.config.hud.fps-count-hud.display", "FPS: %s").string, MC.instance.currentFps
+						)
+					}"
+				)
+				0
+			}
+		}
+
+		register("gay") {
+			executes {
+				if (!TConfig.gayCommand) return@executes 0
+				MC.sendCommand("pc ${it.source.name} is ${if (it.source.name == "lrg89") "100.0" else calcGay()}% gay!")
+				0
+			}
+		}
+
+		register("racism", "racist") {
+			executes {
+				if (!TConfig.racismCommand) return@executes 0
+				MC.sendCommand("pc ${it.source.name} is ${if (it.source.name == "lrg89") "100.0" else calcGay()}% racist!")
+				0
+			}
+		}
+
 		// TODO: downtime tracker (display message again at end of dungeon)
 		// instance ends: kuudra, dungeons, bacte
 		// TODO: at TPS command
@@ -93,6 +151,14 @@ object PartyCommands {
 		val enable by toggle("enable") { false }
 		val cooldown by duration("cooldown", 0.seconds, 20.seconds) { 2.seconds }
 		val ignoreOwnCommands by toggle("ignore-own") { false }
+		val warpCommand by toggle("warp") { true }
+		val transferCommand by toggle("transfer") { true }
+		val allinviteCommand by toggle("allinvite") { true }
+		val coordsCommand by toggle("coords") { true }
+		val pingCommand by toggle("ping") { true }
+		val fpsCommand by toggle("fps") { true }
+		val gayCommand by toggle("gay") { true }
+		val racismCommand by toggle("racism") { true }
 	}
 
 	var lastCommand = TimeMark.farPast()
@@ -130,5 +196,10 @@ object PartyCommands {
 			}
 		}
 		lastCommand = TimeMark.now()
+	}
+
+	fun calcGay(): Double {
+		val raw = Random.nextDouble(0.0, 100.0)
+		return round(raw * 100) / 100
 	}
 }
