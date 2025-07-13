@@ -1,6 +1,5 @@
 package moe.nea.firmament.features.debug.itemeditor
 
-import com.mojang.brigadier.arguments.StringArgumentType
 import kotlinx.coroutines.launch
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonObject
@@ -19,13 +18,14 @@ import net.minecraft.nbt.NbtString
 import net.minecraft.text.Text
 import moe.nea.firmament.Firmament
 import moe.nea.firmament.annotations.Subscribe
+import moe.nea.firmament.commands.RestArgumentType
 import moe.nea.firmament.commands.get
-import moe.nea.firmament.commands.suggestsList
 import moe.nea.firmament.commands.thenArgument
 import moe.nea.firmament.commands.thenExecute
 import moe.nea.firmament.commands.thenLiteral
 import moe.nea.firmament.events.CommandEvent
 import moe.nea.firmament.events.HandledScreenKeyPressedEvent
+import moe.nea.firmament.events.SlotRenderEvents
 import moe.nea.firmament.features.debug.DeveloperFeatures
 import moe.nea.firmament.features.debug.ExportedTestConstantMeta
 import moe.nea.firmament.features.debug.PowerUserTools
@@ -40,6 +40,7 @@ import moe.nea.firmament.util.mc.SNbtFormatter.Companion.toPrettyString
 import moe.nea.firmament.util.mc.displayNameAccordingToNbt
 import moe.nea.firmament.util.mc.loreAccordingToNbt
 import moe.nea.firmament.util.mc.toNbtList
+import moe.nea.firmament.util.render.drawGuiTexture
 import moe.nea.firmament.util.setSkyBlockId
 import moe.nea.firmament.util.skyBlockId
 import moe.nea.firmament.util.tr
@@ -47,12 +48,29 @@ import moe.nea.firmament.util.tr
 object ItemExporter {
 
 	fun exportItem(itemStack: ItemStack): Text {
+		nonOverlayCache.clear()
 		val exporter = LegacyItemExporter.createExporter(itemStack)
-		val json = exporter.exportJson()
-		val jsonFormatted = Firmament.twoSpaceJson.encodeToString(json)
+		var json = exporter.exportJson()
 		val fileName = json.jsonObject["internalname"]!!.jsonPrimitive.content
 		val itemFile = RepoDownloadManager.repoSavedLocation.resolve("items").resolve("${fileName}.json")
 		itemFile.createParentDirectories()
+		if (itemFile.exists()) {
+			val existing = try {
+				Firmament.json.decodeFromString<JsonObject>(itemFile.readText())
+			} catch (ex: Exception) {
+				ex.printStackTrace()
+				JsonObject(mapOf())
+			}
+			val mut = json.jsonObject.toMutableMap()
+			for (prop in existing) {
+				if (prop.key !in mut || mut[prop.key]!!.let {
+						(it is JsonPrimitive && (it.content.isEmpty() || it.content == "0")) || (it is JsonArray && it.isEmpty()) || (it is JsonObject && it.isEmpty())
+					})
+					mut[prop.key] = prop.value
+			}
+			json = JsonObject(mut)
+		}
+		val jsonFormatted = Firmament.twoSpaceJson.encodeToString(json)
 		itemFile.writeText(jsonFormatted)
 		val overlayFile = RepoDownloadManager.repoSavedLocation.resolve("itemsOverlay")
 			.resolve(ExportedTestConstantMeta.current.dataVersion.toString())
@@ -100,25 +118,42 @@ object ItemExporter {
 	fun onCommand(event: CommandEvent.SubCommand) {
 		event.subcommand(DeveloperFeatures.DEVELOPER_SUBCOMMAND) {
 			thenLiteral("reexportlore") {
-				thenArgument("itemid", StringArgumentType.string()) { itemid ->
-					suggestsList { RepoManager.neuRepo.items.items.keys }
+				thenArgument("itemid", RestArgumentType) { itemid ->
+					suggests { ctx, builder ->
+						val spaceIndex = builder.remaining.lastIndexOf(" ")
+						val (before, after) =
+							if (spaceIndex < 0) Pair("", builder.remaining)
+							else Pair(
+								builder.remaining.substring(0, spaceIndex + 1),
+								builder.remaining.substring(spaceIndex + 1)
+							)
+						RepoManager.neuRepo.items.items.keys
+							.asSequence()
+							.filter { it.startsWith(after, ignoreCase = true) }
+							.forEach {
+								builder.suggest(before + it)
+							}
+
+						builder.buildFuture()
+					}
 					thenExecute {
-						val itemid = SkyblockId(get(itemid))
-						if (pathFor(itemid).notExists()) {
+						for (itemid in get(itemid).split(" ").map { SkyblockId(it) }) {
+							if (pathFor(itemid).notExists()) {
+								MC.sendChat(
+									tr(
+										"firmament.repo.export.relore.fail",
+										"Could not find json file to relore for ${itemid}"
+									)
+								)
+							}
+							fixLoreNbtFor(itemid)
 							MC.sendChat(
 								tr(
-									"firmament.repo.export.relore.fail",
-									"Could not find json file to relore for ${itemid}"
+									"firmament.repo.export.relore",
+									"Updated lore / display name for $itemid"
 								)
 							)
 						}
-						fixLoreNbtFor(itemid)
-						MC.sendChat(
-							tr(
-								"firmament.repo.export.relore",
-								"Updated lore / display name for $itemid"
-							)
-						)
 					}
 				}
 				thenLiteral("all") {
@@ -170,6 +205,29 @@ object ItemExporter {
 			val itemStack = event.screen.focusedItemStack ?: return
 			PowerUserTools.lastCopiedStack = (itemStack to exportItem(itemStack))
 		}
+	}
+
+	val nonOverlayCache = mutableMapOf<SkyblockId, Boolean>()
+
+	@Subscribe
+	fun onRender(event: SlotRenderEvents.Before) {
+		if (!PowerUserTools.TConfig.highlightNonOverlayItems) {
+			return
+		}
+		val stack = event.slot.stack ?: return
+		val id = event.slot.stack.skyBlockId?.neuItem
+		if (PowerUserTools.TConfig.dontHighlightSemicolonItems && id != null && id.contains(";")) return
+		val isExported = nonOverlayCache.getOrPut(stack.skyBlockId ?: return) {
+			RepoDownloadManager.repoSavedLocation.resolve("itemsOverlay")
+				.resolve(ExportedTestConstantMeta.current.dataVersion.toString())
+				.resolve("${stack.skyBlockId}.snbt")
+				.exists()
+		}
+		if (!isExported)
+			event.context.drawGuiTexture(
+				Firmament.identifier("selected_pet_background"),
+				event.slot.x, event.slot.y, 16, 16,
+			)
 	}
 
 	fun exportStub(skyblockId: SkyblockId, title: String, extra: (ItemStack) -> Unit = {}) {

@@ -1,6 +1,7 @@
 package moe.nea.firmament.compat.moulconfig
 
 import com.google.auto.service.AutoService
+import io.github.notenoughupdates.moulconfig.ChromaColour
 import io.github.notenoughupdates.moulconfig.Config
 import io.github.notenoughupdates.moulconfig.DescriptionRendereringBehaviour
 import io.github.notenoughupdates.moulconfig.Social
@@ -20,6 +21,7 @@ import io.github.notenoughupdates.moulconfig.gui.editors.ComponentEditor
 import io.github.notenoughupdates.moulconfig.gui.editors.GuiOptionEditorAccordion
 import io.github.notenoughupdates.moulconfig.gui.editors.GuiOptionEditorBoolean
 import io.github.notenoughupdates.moulconfig.gui.editors.GuiOptionEditorButton
+import io.github.notenoughupdates.moulconfig.gui.editors.GuiOptionEditorColour
 import io.github.notenoughupdates.moulconfig.gui.editors.GuiOptionEditorDropdown
 import io.github.notenoughupdates.moulconfig.gui.editors.GuiOptionEditorText
 import io.github.notenoughupdates.moulconfig.observer.GetSetter
@@ -35,9 +37,11 @@ import net.minecraft.util.Identifier
 import net.minecraft.util.StringIdentifiable
 import net.minecraft.util.Util
 import moe.nea.firmament.Firmament
+import moe.nea.firmament.gui.config.AllConfigsGui
 import moe.nea.firmament.gui.config.BooleanHandler
 import moe.nea.firmament.gui.config.ChoiceHandler
 import moe.nea.firmament.gui.config.ClickHandler
+import moe.nea.firmament.gui.config.ColourHandler
 import moe.nea.firmament.gui.config.DurationHandler
 import moe.nea.firmament.gui.config.FirmamentConfigScreenProvider
 import moe.nea.firmament.gui.config.HudMeta
@@ -96,25 +100,27 @@ class MCConfigEditorIntegration : FirmamentConfigScreenProvider {
 		val mappedSetter = setter.xmap(fromT, toT)
 
 		private val delegateI by lazy {
-			wrapComponent(RowComponent(
-				AlignComponent(
-					TextComponent(
-						IMinecraft.instance.defaultFontRenderer,
-						{ formatter(setter.get()) },
-						25,
-						TextComponent.TextAlignment.CENTER, false, false
+			wrapComponent(
+				RowComponent(
+					AlignComponent(
+						TextComponent(
+							IMinecraft.instance.defaultFontRenderer,
+							{ formatter(setter.get()) },
+							25,
+							TextComponent.TextAlignment.CENTER, false, false
+						),
+						GetSetter.constant(HorizontalAlign.CENTER),
+						GetSetter.constant(VerticalAlign.CENTER)
 					),
-					GetSetter.constant(HorizontalAlign.CENTER),
-					GetSetter.constant(VerticalAlign.CENTER)
-				),
-				SliderComponent(
-					mappedSetter,
-					fromT(minValue),
-					fromT(maxValue),
-					minStep,
-					40
+					SliderComponent(
+						mappedSetter,
+						fromT(minValue),
+						fromT(maxValue),
+						minStep,
+						40
+					)
 				)
-			))
+			)
 		}
 	}
 
@@ -182,6 +188,26 @@ class MCConfigEditorIntegration : FirmamentConfigScreenProvider {
 					return any as String
 				}
 			}
+		}
+		register(ColourHandler::class.java) { handler, option, accordionId, configObject ->
+			object : ProcessedEditableOptionFirm<ChromaColour>(option, accordionId, configObject) {
+				override fun fromT(t: ChromaColour): Any {
+					return t
+				}
+
+				override fun toT(any: Any?): ChromaColour? {
+					return any as ChromaColour?
+				}
+
+				override fun createEditor(): GuiOptionEditor {
+					return GuiOptionEditorColour(this)
+				}
+
+				override fun getType(): Type? {
+					return ChromaColour::class.java
+				}
+			}
+
 		}
 		register(ClickHandler::class.java) { handler, option, categoryAccordionId, configObject ->
 			object : ProcessedEditableOptionFirm<Unit>(option, categoryAccordionId, configObject) {
@@ -302,100 +328,110 @@ class MCConfigEditorIntegration : FirmamentConfigScreenProvider {
 		}
 	}
 
-	override fun open(parent: Screen?): Screen {
-		val configObject = object : Config() {
-			override fun saveNow() {
-				ManagedConfig.allManagedConfigs.getAll().forEach { it.save() }
+	val configObject = object : Config() {
+		override fun saveNow() {
+			ManagedConfig.allManagedConfigs.getAll().forEach { it.save() }
+		}
+
+		override fun shouldAutoFocusSearchbar(): Boolean {
+			return true
+		}
+
+		override fun getTitle(): String {
+			return "Firmament ${Firmament.version.friendlyString}"
+		}
+
+		@Deprecated("Deprecated in java")
+		override fun executeRunnable(runnableId: Int) {
+			if (runnableId >= 0)
+				ErrorUtil.softError("Executed runnable $runnableId")
+		}
+
+		override fun getDescriptionBehaviour(option: ProcessedOption?): DescriptionRendereringBehaviour {
+			return DescriptionRendereringBehaviour.EXPAND_PANEL
+		}
+
+		fun mkSocial(name: String, identifier: Identifier, link: String) = object : Social() {
+			override fun onClick() {
+				Util.getOperatingSystem().open(URI(link))
 			}
 
-			override fun shouldAutoFocusSearchbar(): Boolean {
-				return true
+			override fun getTooltip(): List<String> {
+				return listOf(name)
 			}
 
-			override fun getTitle(): String {
-				return "Firmament ${Firmament.version.friendlyString}"
-			}
-
-			@Deprecated("Deprecated in java")
-			override fun executeRunnable(runnableId: Int) {
-				if (runnableId >= 0)
-					ErrorUtil.softError("Executed runnable $runnableId")
-			}
-
-			override fun getDescriptionBehaviour(option: ProcessedOption?): DescriptionRendereringBehaviour {
-				return DescriptionRendereringBehaviour.EXPAND_PANEL
-			}
-
-			fun mkSocial(name: String, identifier: Identifier, link: String) = object : Social() {
-				override fun onClick() {
-					Util.getOperatingSystem().open(URI(link))
-				}
-
-				override fun getTooltip(): List<String> {
-					return listOf(name)
-				}
-
-				override fun getIcon(): MyResourceLocation {
-					return identifier.toMoulConfig()
-				}
-			}
-
-			private val socials = listOf<Social>(
-				mkSocial("Discord", Firmament.identifier("textures/socials/discord.png"),
-				         Firmament.modContainer.metadata.contact.get("discord").get()),
-				mkSocial("Source Code", Firmament.identifier("textures/socials/git.png"),
-				         Firmament.modContainer.metadata.contact.get("sources").get()),
-				mkSocial("Modrinth", Firmament.identifier("textures/socials/modrinth.png"),
-				         Firmament.modContainer.metadata.contact.get("modrinth").get()),
-			)
-
-			override fun getSocials(): List<Social> {
-				return socials
+			override fun getIcon(): MyResourceLocation {
+				return identifier.toMoulConfig()
 			}
 		}
-		val categories = ManagedConfig.Category.entries.map {
-			val options = mutableListOf<ProcessedOptionFirm>()
-			var nextAccordionId = 720
-			it.configs.forEach { config ->
-				val categoryAccordionId = nextAccordionId++
-				options.add(object : ProcessedOptionFirm(-1, configObject) {
-					override fun getDebugDeclarationLocation(): String {
-						return "FirmamentConfig:${config.name}"
-					}
 
-					override fun getName(): String {
-						return config.labelText.string
-					}
+		private val socials = listOf<Social>(
+			mkSocial(
+				"Discord", Firmament.identifier("textures/socials/discord.png"),
+				Firmament.modContainer.metadata.contact.get("discord").get()
+			),
+			mkSocial(
+				"Source Code", Firmament.identifier("textures/socials/git.png"),
+				Firmament.modContainer.metadata.contact.get("sources").get()
+			),
+			mkSocial(
+				"Modrinth", Firmament.identifier("textures/socials/modrinth.png"),
+				Firmament.modContainer.metadata.contact.get("modrinth").get()
+			),
+		)
 
-					override fun getDescription(): String {
-						return "Missing description"
-					}
-
-					override fun get(): Any {
-						return Unit
-					}
-
-					override fun getType(): Type {
-						return Unit.javaClass
-					}
-
-					override fun set(value: Any?): Boolean {
-						return false
-					}
-
-					override fun createEditor(): GuiOptionEditor {
-						return GuiOptionEditorAccordion(this, categoryAccordionId)
-					}
-				})
-				config.allOptions.forEach { (key, option) ->
-					val processedOption = getHandler(option, categoryAccordionId, configObject)
-					options.add(processedOption)
-				}
-			}
-
-			return@map ProcessedCategoryFirm(it, options)
+		override fun getSocials(): List<Social> {
+			return socials
 		}
+	}
+	val categories = ManagedConfig.Category.entries.map {
+		val options = mutableListOf<ProcessedOptionFirm>()
+		var nextAccordionId = 720
+		it.configs.forEach { config ->
+			val categoryAccordionId = nextAccordionId++
+			options.add(object : ProcessedOptionFirm(-1, configObject) {
+				override fun getDebugDeclarationLocation(): String {
+					return "FirmamentConfig:${config.name}"
+				}
+
+				override fun getName(): String {
+					return config.labelText.string
+				}
+
+				override fun getDescription(): String {
+					return "Missing description"
+				}
+
+				override fun get(): Any {
+					return Unit
+				}
+
+				override fun getType(): Type {
+					return Unit.javaClass
+				}
+
+				override fun set(value: Any?): Boolean {
+					return false
+				}
+
+				override fun createEditor(): GuiOptionEditor {
+					return GuiOptionEditorAccordion(this, categoryAccordionId)
+				}
+			})
+			config.allOptions.forEach { (key, option) ->
+				val processedOption = getHandler(option, categoryAccordionId, configObject)
+				options.add(processedOption)
+			}
+		}
+
+		return@map ProcessedCategoryFirm(it, options)
+	}
+
+	override fun open(search: String?, parent: Screen?): Screen {
 		val editor = MoulConfigEditor(ProcessedCategory.collect(categories), configObject)
+		if (search != null)
+			editor.search(search)
+		editor.setWide(AllConfigsGui.ConfigConfig.enableWideMC)
 		return GuiElementWrapper(editor) // TODO : add parent support
 	}
 
