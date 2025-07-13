@@ -5,13 +5,17 @@ import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
 import kotlin.concurrent.thread
+import kotlin.jvm.optionals.getOrNull
 import net.minecraft.component.DataComponentTypes
 import net.minecraft.item.ItemStack
+import net.minecraft.nbt.NbtByte
 import net.minecraft.nbt.NbtCompound
 import net.minecraft.nbt.NbtElement
 import net.minecraft.nbt.NbtInt
+import net.minecraft.nbt.NbtList
 import net.minecraft.nbt.NbtOps
 import net.minecraft.nbt.NbtString
+import net.minecraft.registry.tag.ItemTags
 import net.minecraft.text.Text
 import net.minecraft.util.Unit
 import moe.nea.firmament.Firmament
@@ -36,8 +40,10 @@ import moe.nea.firmament.util.unformattedString
 
 class LegacyItemExporter private constructor(var itemStack: ItemStack) {
 	init {
-	    require(!itemStack.isEmpty)
+		require(!itemStack.isEmpty)
+		itemStack.count = 1
 	}
+
 	var lore = itemStack.loreAccordingToNbt
 	var name = itemStack.displayNameAccordingToNbt
 	val extraAttribs = itemStack.extraAttributes.copy()
@@ -133,12 +139,47 @@ class LegacyItemExporter private constructor(var itemStack: ItemStack) {
 		legacyNbt.put("HideFlags", NbtInt.of(254))
 		copyUnbreakable()
 		copyItemModel()
+		copyPotion()
 		copyExtraAttributes()
 		copyLegacySkullNbt()
 		copyDisplay()
+		copyColour()
 		copyEnchantments()
 		copyEnchantGlint()
 		// TODO: copyDisplay
+	}
+
+	private fun copyPotion() {
+		val effects = itemStack.get(DataComponentTypes.POTION_CONTENTS) ?: return
+		legacyNbt.put("CustomPotionEffects", NbtList().also {
+			effects.effects.forEach { effect ->
+				val effectId = effect.effectType.key.get().value.path
+				val duration = effect.duration
+				val legacyId = LegacyItemData.effectList[effectId]!!
+
+				it.add(NbtCompound().apply {
+					put("Ambient", NbtByte.of(false))
+					put("Duration", NbtInt.of(duration))
+					put("Id", NbtByte.of(legacyId.id.toByte()))
+					put("Amplifier", NbtByte.of(effect.amplifier.toByte()))
+				})
+			}
+		})
+	}
+
+	fun NbtCompound.getOrPutCompound(name: String): NbtCompound {
+		val compound = getCompoundOrEmpty(name)
+		put(name, compound)
+		return compound
+	}
+
+	private fun copyColour() {
+		if (!itemStack.isIn(ItemTags.DYEABLE)) {
+			itemStack.remove(DataComponentTypes.DYED_COLOR)
+			return
+		}
+		val leatherTint = itemStack.componentChanges.get(DataComponentTypes.DYED_COLOR)?.getOrNull() ?: return
+		legacyNbt.getOrPutCompound("display").put("color", NbtInt.of(leatherTint.rgb))
 	}
 
 	private fun copyItemModel() {
@@ -147,10 +188,10 @@ class LegacyItemExporter private constructor(var itemStack: ItemStack) {
 	}
 
 	private fun copyDisplay() {
-		legacyNbt.put("display", NbtCompound().apply {
+		legacyNbt.getOrPutCompound("display").apply {
 			put("Lore", lore.map { NbtString.of(it.getLegacyFormatString(trimmed = true)) }.toNbtList())
 			putString("Name", name.getLegacyFormatString(trimmed = true))
-		})
+		}
 	}
 
 	fun exportModernSnbt(): NbtElement {

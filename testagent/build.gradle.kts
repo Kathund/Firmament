@@ -1,6 +1,7 @@
 plugins {
 	java
-	alias(libs.plugins.shadow)
+	id("firmament.common")
+	id("com.gradleup.shadow")
 }
 dependencies {
 	implementation(libs.asm)
