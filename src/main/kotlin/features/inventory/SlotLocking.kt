@@ -31,6 +31,7 @@ import moe.nea.firmament.events.HandledScreenForegroundEvent
 import moe.nea.firmament.events.HandledScreenKeyPressedEvent
 import moe.nea.firmament.events.HandledScreenKeyReleasedEvent
 import moe.nea.firmament.events.IsSlotProtectedEvent
+import moe.nea.firmament.events.ItemTooltipEvent
 import moe.nea.firmament.events.ScreenChangeEvent
 import moe.nea.firmament.events.SlotRenderEvents
 import moe.nea.firmament.features.FirmamentFeature
@@ -41,6 +42,7 @@ import moe.nea.firmament.util.CommonSoundEffects
 import moe.nea.firmament.util.MC
 import moe.nea.firmament.util.SBData
 import moe.nea.firmament.util.SkyBlockIsland
+import moe.nea.firmament.util.bold
 import moe.nea.firmament.util.data.ProfileSpecificDataHolder
 import moe.nea.firmament.util.extraAttributes
 import moe.nea.firmament.util.json.DashlessUUIDSerializer
@@ -481,16 +483,12 @@ object SlotLocking : FirmamentFeature {
 	@Subscribe
 	fun onRenderSlotOverlay(it: SlotRenderEvents.After) {
 		val isSlotLocked = it.slot.inventory is PlayerInventory && it.slot.index in (lockedSlots ?: setOf())
-		val isUUIDLocked = (it.slot.stack?.skyblockUUID) in (lockedUUIDs ?: setOf())
-		if (isSlotLocked || isUUIDLocked) {
+		if (isSlotLocked) {
 			it.context.drawGuiTexture(
 				RenderLayer::getGuiTexturedOverlay,
 				when {
 					isSlotLocked ->
 						(Identifier.of("firmament:slot_locked"))
-
-					isUUIDLocked ->
-						(Identifier.of("firmament:uuid_locked"))
 
 					else ->
 						error("unreachable")
@@ -499,6 +497,16 @@ object SlotLocking : FirmamentFeature {
 				16, 16,
 				-1
 			)
+		}
+	}
+
+	@Subscribe
+	fun addSlotLockText(it: ItemTooltipEvent) {
+		val skyblockUUID = it.stack.skyblockUUID ?: return
+		val isUUIDLocked = (skyblockUUID) in (lockedUUIDs ?: setOf())
+		if (isUUIDLocked) {
+			val id = it.stack.skyBlockId ?: return
+			it.lines.add(tr("firmament.config.slot-locking.lock-uuid.display", "Item locked").red().bold())
 		}
 	}
 }
