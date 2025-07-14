@@ -1,7 +1,7 @@
 package moe.nea.firmament.features.items
 
+import io.github.notenoughupdates.moulconfig.ChromaColour
 import java.util.LinkedList
-import me.shedaniel.math.Color
 import net.minecraft.block.Block
 import net.minecraft.block.BlockState
 import net.minecraft.block.Blocks
@@ -10,6 +10,7 @@ import net.minecraft.util.hit.HitResult
 import net.minecraft.util.math.BlockPos
 import moe.nea.firmament.annotations.Subscribe
 import moe.nea.firmament.events.ClientStartedEvent
+import moe.nea.firmament.events.WorldKeyboardEvent
 import moe.nea.firmament.events.WorldRenderLastEvent
 import moe.nea.firmament.features.FirmamentFeature
 import moe.nea.firmament.gui.config.ManagedConfig
@@ -24,6 +25,8 @@ object BlockZapperOverlay : FirmamentFeature {
 
 	object TConfig : ManagedConfig(identifier, Category.ITEMS) {
 		var blockZapperOverlay by toggle("block-zapper-overlay") { false }
+		val color by colour("color") { ChromaColour.fromStaticRGB(160, 0, 0, 60) }
+		var undoKey by keyBindingWithDefaultUnbound("undo-key")
 	}
 
 	@Subscribe
@@ -124,12 +127,20 @@ object BlockZapperOverlay : FirmamentFeature {
 			RenderInWorldContext.renderInWorld(event) {
 				if (MC.player?.isSneaking ?: false) {
 					zapperBlocks.forEach {
-						block(it, Color.ofRGBA(255, 0, 0, 60).color)
+						block(it, TConfig.color.getEffectiveColourRGB())
 					}
 				} else {
-					sharedVoxelSurface(zapperBlocks, Color.ofRGBA(255, 0, 0, 60).color)
+					sharedVoxelSurface(zapperBlocks, TConfig.color.getEffectiveColourRGB())
 				}
 			}
 		}
+	}
+
+	@Subscribe
+	fun onWorldKeyboard(it: WorldKeyboardEvent) {
+		if (!TConfig.undoKey.isBound) return
+		if (!it.matches(TConfig.undoKey)) return
+		if (MC.stackInHand.skyBlockId != SkyBlockItems.BLOCK_ZAPPER) return
+		MC.sendCommand("undozap")
 	}
 }
