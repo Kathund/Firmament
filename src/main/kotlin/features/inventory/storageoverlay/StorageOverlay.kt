@@ -1,5 +1,6 @@
 package moe.nea.firmament.features.inventory.storageoverlay
 
+import io.github.notenoughupdates.moulconfig.ChromaColour
 import java.util.SortedMap
 import kotlinx.serialization.serializer
 import net.minecraft.client.gui.screen.ingame.GenericContainerScreen
@@ -10,6 +11,7 @@ import net.minecraft.network.packet.c2s.play.CloseHandledScreenC2SPacket
 import moe.nea.firmament.annotations.Subscribe
 import moe.nea.firmament.events.ScreenChangeEvent
 import moe.nea.firmament.events.SlotClickEvent
+import moe.nea.firmament.events.SlotRenderEvents
 import moe.nea.firmament.events.TickEvent
 import moe.nea.firmament.features.FirmamentFeature
 import moe.nea.firmament.gui.config.ManagedConfig
@@ -28,14 +30,55 @@ object StorageOverlay : FirmamentFeature {
 	object TConfig : ManagedConfig(identifier, Category.INVENTORY) {
 		val alwaysReplace by toggle("always-replace") { true }
 		val outlineActiveStoragePage by toggle("outline-active-page") { false }
+		val outlineActiveStoragePageColour by colour("outline-active-page-colour") {
+			ChromaColour.fromRGB(
+				255,
+				255,
+				0,
+				0,
+				255
+			)
+		}
 		val columns by integer("rows", 1, 10) { 3 }
 		val height by integer("height", 80, 3000) { 3 * 18 * 6 }
+		val retainScroll by toggle("retain-scroll") { true }
 		val scrollSpeed by integer("scroll-speed", 1, 50) { 10 }
 		val inverseScroll by toggle("inverse-scroll") { false }
 		val padding by integer("padding", 1, 20) { 5 }
 		val margin by integer("margin", 1, 60) { 20 }
 		val itemsBlockScrolling by toggle("block-item-scrolling") { true }
+		val highlightSearchResults by toggle("highlight-search-results") { true }
+		val highlightSearchResultsColour by colour("highlight-search-results-colour") {
+			ChromaColour.fromRGB(
+				0,
+				176,
+				0,
+				0,
+				255
+			)
+		}
 	}
+
+	@Subscribe
+	fun highlightSlots(event: SlotRenderEvents.Before) {
+		if (!TConfig.highlightSearchResults) return
+		val storageOverlayScreen =
+			(MC.screen as? StorageOverlayScreen)
+				?: (MC.handledScreen?.customGui as? StorageOverlayCustom)?.overview
+				?: return
+		val stack = event.slot.stack ?: return
+		val search = storageOverlayScreen.searchText.get().takeIf { it.isNotBlank() } ?: return
+		if (storageOverlayScreen.matchesSearch(stack, search)) {
+			event.context.fill(
+				event.slot.x,
+				event.slot.y,
+				event.slot.x + 16,
+				event.slot.y + 16,
+				TConfig.highlightSearchResultsColour.getEffectiveColourRGB()
+			)
+		}
+	}
+
 
 	fun adjustScrollSpeed(amount: Double): Double {
 		return amount * TConfig.scrollSpeed * (if (TConfig.inverseScroll) 1 else -1)

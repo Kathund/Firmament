@@ -4,6 +4,12 @@ import io.github.notenoughupdates.moulconfig.observer.ObservableList
 import io.github.notenoughupdates.moulconfig.xml.Bind
 import net.minecraft.client.gui.screen.Screen
 import net.minecraft.text.Text
+import moe.nea.firmament.annotations.Subscribe
+import moe.nea.firmament.commands.RestArgumentType
+import moe.nea.firmament.commands.get
+import moe.nea.firmament.commands.thenArgument
+import moe.nea.firmament.commands.thenExecute
+import moe.nea.firmament.events.CommandEvent
 import moe.nea.firmament.util.MC
 import moe.nea.firmament.util.MoulConfigUtils
 import moe.nea.firmament.util.ScreenUtil.setScreenLater
@@ -18,6 +24,7 @@ object AllConfigsGui {
 	object ConfigConfig : ManagedConfig("configconfig", Category.META) {
 		val enableYacl by toggle("enable-yacl") { false }
 		val enableMoulConfig by toggle("enable-moulconfig") { true }
+		val enableWideMC by toggle("wide-moulconfig") { false }
 	}
 
 	fun <T> List<T>.toObservableList(): ObservableList<T> = ObservableList(this)
@@ -66,7 +73,7 @@ object AllConfigsGui {
 		return MoulConfigUtils.loadScreen("config/main", CategoryView(), parent)
 	}
 
-	fun makeScreen(parent: Screen? = null): Screen {
+	fun makeScreen(search: String? = null, parent: Screen? = null): Screen {
 		val wantedKey = when {
 			ConfigConfig.enableMoulConfig -> "moulconfig"
 			ConfigConfig.enableYacl -> "yacl"
@@ -74,10 +81,23 @@ object AllConfigsGui {
 		}
 		val provider = FirmamentConfigScreenProvider.providers.find { it.key == wantedKey }
 			?: FirmamentConfigScreenProvider.providers.first()
-		return provider.open(parent)
+		return provider.open(search, parent)
 	}
 
 	fun showAllGuis() {
 		setScreenLater(makeScreen())
 	}
+
+	@Subscribe
+	fun registerCommands(event: CommandEvent.SubCommand) {
+		event.subcommand("search") {
+			thenArgument("search", RestArgumentType) { search ->
+				thenExecute {
+					val search = this[search]
+					setScreenLater(makeScreen(search = search))
+				}
+			}
+		}
+	}
+
 }
