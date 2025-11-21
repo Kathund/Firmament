@@ -30,7 +30,7 @@ object WardrobeKeybinds {
 	fun switchSlot(event: HandledScreenKeyPressedEvent) {
 		if (MC.player == null || MC.world == null || MC.interactionManager == null) return
 
-		val regex = Regex("Wardrobe \\([12]/2\\)")
+		val regex = Regex("Wardrobe \\([123]/3\\)")
 		if (!regex.matches(event.screen.title.string)) return
 		if (!TConfig.wardrobeKeybinds) return
 
